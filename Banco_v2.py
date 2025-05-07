@@ -5,7 +5,7 @@ import pytz
 # ! Menu principal
 menu_principal = '''
 [1] Criar Usuário
-[2] Criar conta corrente
+[2] Mostrar Usuários
 [3] Acessar Usuário
 [4] Sair
 
@@ -19,18 +19,101 @@ menu_secundário = '''
 [q] Sair
 
 ==> '''
+def acessar_usuário(usuários: list, contas_correntes: list):
+    cpf = input("---Por favor, informe o CPF do titular da conta---\n-> ")
+    if not cpf.isdigit() or len(cpf) != 11:
+        print("\n---CPF inválido! Deve conter 11 dígitos numéricos.---\n")
+        return
+    if not checar_cpf(cpf, usuários):
+        print("\n---CPF não encontrado! É necessário criar um usuário primeiro.---\n")
+        return
+    if checar_cpf_em_contas(cpf, contas_correntes):
+        palavra_secreta = input("Por favor, informe a sua palavra secreta\n-> ")
+        if not palavra_secreta.strip():
+            print("\n---Palavra secreta não pode ser vazia!---\n")
+            return
+        if checar_palavra_secreta(palavra_secreta, usuários):
+            print("\n---Palavra secreta correta!---\n")
+            nome_cliente = ""
+            for usuário in usuários:
+                if usuário["CPF"] == cpf:
+                    nome_cliente = usuário["Nome"]
+                    break
+            return nome_cliente
+        else:
+            print("\n---Palavra secreta incorreta!---\n")
+            return False
 
-usuários = []
-contas_correntes = []
+def checar_palavra_secreta(palavra_secreta: str, usuários: list) -> bool:
+    for usuário in usuários:
+        if usuário["Palavra_Secreta"] == palavra_secreta:
+            return True
+    return False
 
-def criar_conta_corrente(contas):
-    conta_corrente = input("Por favor, informe sua conta corrente")
+def checar_cpf_em_contas(cpf: str, contas: list) -> bool:
+    """
+    Verifica se um CPF já está associado a uma conta.
+    
+    Args:
+        cpf (str): CPF a ser verificado
+        contas (list): Lista de contas existentes
+        
+    Returns:
+        bool: True se o CPF já estiver em uma conta, False caso contrário
+    """
+    for conta in contas:
+        if conta["CPF"] == cpf:
+            return True
+    return False
 
-    contas.append({"Conta Corrente": conta_corrente})
+def criar_conta_corrente(agencia: str, contas: list, clientes: list) -> list:
+    """
+    Cria uma nova conta corrente para um cliente existente.
+    
+    Args:
+        agencia (str): Número da agência
+        contas (list): Lista de contas existentes
+        clientes (list): Lista de clientes existentes
+        
+    Returns:
+        list: Lista atualizada de contas
+    """
+    cpf = input("---Por favor, informe o CPF do titular da conta---\n-> ")
+    
+    # Verificar se o CPF existe na lista de clientes
+    if not checar_cpf(cpf, clientes):
+        print("\n---CPF não encontrado! É necessário criar um usuário primeiro.---\n")
+        return contas
+        
+    # Verificar se o CPF já tem uma conta
+    if checar_cpf_em_contas(cpf, contas):
+        print("\n---Este CPF já possui uma conta corrente!---\n")
+        return contas
+        
+    numero_da_conta = input("---Por favor, informe o número da sua conta---\n-> ")
 
-    print(contas)
+    # Verificar se o número da conta já existe
+    for conta in contas:
+        if conta["Número"] == numero_da_conta:
+            print("\n---Número de conta já existe! Por favor, escolha outro número.---\n")
+            return contas
 
-#* Fortamação de endereço
+    # Encontrar o nome do cliente pelo CPF
+    nome_cliente = ""
+    for cliente in clientes:
+        if cliente["CPF"] == cpf:
+            nome_cliente = cliente["Nome"]
+            break
+
+    contas.append({
+        "Agência": agencia,
+        "Número": numero_da_conta,
+        "Nome": nome_cliente,
+        "CPF": cpf
+    })
+    print("\n---Conta corrente criada com sucesso!---\n")
+    return contas   
+
 def registrar_endereço():
     logradouro = input("---Informe o Seu logradouro---\n-> ")
     numero = input("---Informe o número do seu endereço---\n-> ")
@@ -40,47 +123,79 @@ def registrar_endereço():
     endereco_completo = (f"Rua: {logradouro},{numero} - Bairro: {bairro} - Cidade: {cidade}/{estado}")
     return endereco_completo
 
-#* Checar CPF repetido
 def checar_cpf(cpf, clientes):
     for cliente in clientes:
         if cliente["CPF"] == cpf:
             return True  # CPF já cadastrado
     return False  # CPF não encontrado
 
-
+def criar_usuário(clientes: list, contas: list) -> None:
+    """
+    Cria um novo usuário no sistema bancário.
     
+    Args:
+        clientes (list): Lista de clientes existentes
+        contas (list): Lista de contas existentes
+        
+    Returns:
+        None
+    """
+    cpf = input("Por favor informe CPF (apenas números)\n-> ")
     
-
-#* Precisa de nome, data de nascimento, cpf e endereço
-def criar_usuário(clientes, contas):
-    cpf = input("Por favor informe CPF\n-> ")
-
+    # Validar formato do CPF
+    if not cpf.isdigit() or len(cpf) != 11:
+        print("\n---CPF inválido! Deve conter 11 dígitos numéricos.---\n")
+        return
+        
     # Checar se o CPF já existe
     if checar_cpf(cpf, clientes):
         print("\n---CPF já cadastrado! Não é possível criar usuário com este CPF.---\n")
-        return  # Interrompe a criação do usuário
+        return
 
     nome = input("Por favor informe Nome\n-> ")
-    data_de_nascimento = input("Por favor informe Data de nascimento\n-> ")
+    if not nome.strip():
+        print("\n---Nome não pode ser vazio!---\n")
+        return
+        
+    data_de_nascimento = input("Por favor informe Data de nascimento (DD/MM/AAAA)\n-> ")
+    try:
+        datetime.strptime(data_de_nascimento, "%d/%m/%Y")
+    except ValueError:
+        print("\n---Data de nascimento inválida! Use o formato DD/MM/AAAA.---\n")
+        return
+        
     endereço = registrar_endereço()
     
-    clientes.append({"Nome": nome, "Data_de_Nascimento": data_de_nascimento, "CPF": cpf, "Endereço": endereço})
-    print("\n---Usuário criado com sucesso!---\n")
+    palavra_secreta = input("Por favor, informe a sua palavra secreta\n-> ")
+    if not palavra_secreta.strip():
+        print("\n---Palavra secreta não pode ser vazia!---\n")
+        return
 
-# Função para obter hora
+    # Adicionar o usuário
+    clientes.append({
+        "Nome": nome,
+        "Data_de_Nascimento": data_de_nascimento,
+        "CPF": cpf,
+        "Endereço": endereço,
+        "Palavra_Secreta": palavra_secreta
+
+    })
+    print("\n---Usuário criado com sucesso!---\n")
+    
+    # Criar a conta corrente após criar o usuário
+    criar_conta_corrente("0001", contas, clientes)
+
 def obter_data():
     data_fuso_horario = pytz.timezone("America/Sao_Paulo")
     return datetime.now(data_fuso_horario).strftime("%d/%m/%Y %H:%M")
 
-# Função para verificar limite de transações
 def verificar_limite_transacoes(total, limite):
     if total >= limite:
         print("\n---Limite atingido!---\n")
         return False  # Limite atingido
     return True  # Ainda permitido
 
-# Função para realizar depósito
-def efetuar_deposito(valor, saldo, depositos, total_de_transacoes):
+def efetuar_deposito(valor, saldo, depositos, total_de_transacoes, /):
     saldo_atual = saldo
     transacao = total_de_transacoes
 
@@ -94,7 +209,6 @@ def efetuar_deposito(valor, saldo, depositos, total_de_transacoes):
     
     return {"saldo": saldo_atual, "transacao": transacao}
 
-# Função para realizar saque
 def efetuar_saque(valor, saldo, saques, total_de_saques):
     saldo_atual = saldo
     saques_realizados = total_de_saques
@@ -113,7 +227,6 @@ def efetuar_saque(valor, saldo, saques, total_de_saques):
             print("\n---Valor sacado com sucesso!---\n")
     return {"saldo": saldo_atual, "saques_realizados": saques_realizados}
 
-# Função para mostrar o extrato
 def mostrar_extrato(depositos, saques, saldo):
     saldo_atual = saldo
     lista_de_depositos = depositos
@@ -134,7 +247,6 @@ def mostrar_extrato(depositos, saques, saldo):
         print(f"|    Seu saldo é: R${saldo:.2f}")
         print("=" * 50)
 
-# Função principal
 def _main():
     # * Variáveis das operações básicas (Saque, Depósito e Extrato)
     saldo = 0
@@ -157,13 +269,18 @@ def _main():
         escolha_menu = input(menu_principal)
 
         if escolha_menu == "1":
-            criar_usuário(usuários, None)
+            criar_usuário(usuários, contas_correntes)
 
         elif escolha_menu == "2":
-            criar_conta_corrente(contas=contas_correntes)
+            for usuário in usuários:
+                print(f"Nome: {usuário['Nome']} - CPF: {usuário['CPF']}")
 
         elif escolha_menu == "3":
-            print("Acessar usuário")
+            nome_cliente = acessar_usuário(usuários, contas_correntes)
+            if not nome_cliente:
+                continue
+            else:
+                print(f"\n---Bem-vindo(a) de volta, {nome_cliente}!---\n")
 
             while True:
 
