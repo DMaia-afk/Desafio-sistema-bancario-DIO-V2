@@ -19,6 +19,7 @@ menu_secundário = '''
 [q] Sair
 
 ==> '''
+
 def acessar_usuário(usuários: list, contas_correntes: list):
     cpf = input("---Por favor, informe o CPF do titular da conta---\n-> ")
     if not cpf.isdigit() or len(cpf) != 11:
