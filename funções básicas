@@ -1,0 +1,14 @@
+acessar_usuário
+checar_palavra_secreta
+criar_conta_corrente
+registrar_endereço V
+checar_cpf V
+criar_usuário V
+obter_data
+verificar_limite_transacoes
+efetuar_deposito
+efetuar_saque
+mostrar_extrato
+
+
+_main
