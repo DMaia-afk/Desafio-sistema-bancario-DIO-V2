@@ -50,12 +50,14 @@ def checar_cpf(cpf, clientes):
     for cliente in clientes:
         if cliente.cpf == cpf:
             return cliente
-    return False
+    return 
 
 def criar_cliente(clientes):
     while True:
         cpf = corrigir_cpf(input("\nPor favor informe o seu CPF:\n-> "))
-        checar_cpf(cpf, clientes = clientes)
+        if checar_cpf(cpf, clientes = clientes):
+            print("\nJá existe um cliente cadastrado com esse CPF!\n")
+            continue
 
         nome = input ("\nPor favor informe o seu nome completo:\n-> ")
         if not nome.strip():
@@ -79,7 +81,7 @@ def criar_cliente(clientes):
 
         clientes.append(teste)
 
-        return clientes
+        return 
 
 
 def criar_conta(contas, clientes):
@@ -140,7 +142,7 @@ def main():
         #menu_acessos
         if escolher_menu == "1":
             criar_cliente(clientes)
-            clientes, contas = criar_conta(contas, clientes)
+            criar_conta(contas, clientes)
 
         #* Listar contas
         elif escolher_menu == "2":
@@ -166,11 +168,11 @@ def main():
 
                     #Depositar
                     if escolher_operação == "1":
-                        clientes = depositar(cliente)
+                        depositar(cliente)
 
                     #Sacar
                     elif escolher_operação == "2":
-                        clientes = sacar(cliente)
+                        sacar(cliente)
 
                     #Extrato
                     elif escolher_operação == "3":
